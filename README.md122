@@ -1,0 +1,1165 @@
+TASK 1
+CO1	Examine the basic concepts of data mining and machine learning concepts
+Task 1	i.Implement the Find-S algorithm to learn the most specific hypothesis from a dataset.
+ii.Implement the Candidate Elimination algorithm to compute the version space for a concept.
+iii.Compare the outputs of Find-S and Candidate Elimination on the same dataset.
+iv.Understand how these algorithms behave with noisy or incomplete data.
+Platform: Orange, Google co-lab, Anaconda navigator, Language: Python
+
+FIND-S Algorithm:
+
+Objective:
+Given a dataset of weather conditions with binary attributes (Sunny/Rainy, Warm/Cold, Normal/High, Strong/Weak, Warm/Cool, Same/Change), the objective is to find the most specific hypothesis based on positive examples.
+
+Algorithm:
+
+Step 1: Start by iterating through the target values (tar).
+If the target is "yes" (positive instance), copy the corresponding concept values into specific_h as the initial hypothesis. This hypothesis will be modified in the subsequent steps.
+Step 2: Iterate through the concepts (con):
+If the target for a given concept is "yes", compare each feature of the concept with the corresponding feature in specific_h.
+If a feature in the concept does not match the corresponding feature in specific_h, replace that feature in specific_h with "?" (generalize the hypothesis).
+Step 3: Continue this process until all positive instances are covered.
+Step 4: Return the final specific_h, which will be the most specific hypothesis consistent with all positive examples.
+
+Training Examples:
+
+
+Program:
+import pandas as pd
+import numpy as np
+data = pd.read_csv('/content/data1.csv')
+concepts = np.array(data)[:,:-1]
+
+concepts
+target = np.array(data)[:,-1]
+
+target
+def train(con, tar):
+    for i, val in enumerate(tar):
+        if val == 'yes':
+            specific_h = con[i].copy()
+            break
+
+    for i, val in enumerate(con):
+        if tar[i] == 'yes':
+            for x in range(len(specific_h)):
+                if val[x] != specific_h[x]:
+                    specific_h[x] = '?'
+                else:
+                    pass
+    return specific_h
+print(train(concepts, target))
+
+
+
+
+Candidate Elimination algorithm
+.
+
+Algorithm:
+Step 1: Initialization:
+Set specific_h to the first positive example (the most specific hypothesis).
+Initialize general_h as a list of general hypotheses, each filled with "?".
+Step 2: Processing the instances:
+For each example in the training set:
+                        If the target is "yes" (positive instance):
+                         For each feature in the concept, if it differs from the corresponding feature in specific_h, generalize the specific_h by replacing that feature with "?".
+Also, the corresponding entry in general_h is consistent with the generalization.
+                       If the target is "no" (negative instance):
+ For each feature, if the feature in the concept differs from specific_h, update the general_h to rule out this negative instance by specifying the feature value. If a feature matches, keep it as "?".
+Step 3: Pruning general hypotheses:
+Remove overly general hypotheses from general_h that are entirely made up of "?".
+Step 4: Return the final specific_h (most specific hypothesis) and general_h (set of general hypotheses).
+
+Program:
+
+import numpy as np
+import pandas as pd
+
+data = pd.read_csv('/content/data1.csv')
+concepts = np.array(data.iloc[:,0:-1])
+target = np.array(data.iloc[:,-1])
+def learn(concepts, target):
+    specific_h = concepts[0].copy()
+    print("initialization of specific_h \n",specific_h)
+    general_h = ["?" for i in range(len(specific_h))] for i in range(len(specific_h))]
+    print("initialization of general_h \n", general_h)
+
+    for i, h in enumerate(concepts):
+        if target[i] == "yes":
+            print("If instance is Positive ")
+            for x in range(len(specific_h)):
+                if h[x]!= specific_h[x]:
+                    specific_h[x] ='?'
+                    general_h[x][x] ='?'
+
+        if target[i] == "no":
+            print("If instance is Negative ")
+            for x in range(len(specific_h)):
+                if h[x]!= specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+
+        print(" step {}".format(i+1))
+        print(specific_h)
+        print(general_h)
+        print("\n")
+        print("\n")
+
+    indices = [i for i, val in enumerate(general_h) if val == ['?', '?', '?', '?', '?', '?']]
+    for i in indices:
+        general_h.remove(['?', '?', '?', '?', '?', '?'])
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+
+print("Final Specific_h:", s_final, sep="\n")
+print("Final General_h:", g_final, sep="\n")
+
+
+
+TASK 2
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 1: Load the Dataset
+# Replace 'data.csv' with the path to your dataset
+data = pd.read_csv('dataT.csv')
+print("First 5 rows of the dataset:")
+print(data.head())
+
+# Step 2: Data Preprocessing
+# Check for missing values
+print("\nChecking for missing values:")
+print(data.isnull().sum())
+
+# Fill missing values (if any)
+data['Age'].fillna(data['Age'].mean(), inplace=True)
+data['Salary'].fillna(data['Salary'].median(), inplace=True)
+
+# Encode categorical variables
+data['Gender'] = data['Gender'].map({'Male': 0, 'Female': 1})
+data['Purchased'] = data['Purchased'].map({'No': 0, 'Yes': 1})
+
+print("\nDataset after preprocessing:")
+print(data.head())
+
+# Step 3: Data Analysis
+print("\nDescriptive Statistics:")
+print(data.describe())
+
+# Correlation matrix
+print("\nCorrelation Matrix:")
+print(data.corr())
+
+# Step 4: Data Visualization
+# Distribution of Age
+plt.figure(figsize=(6, 4))
+sns.histplot(data['Age'], kde=True, bins=20, color='blue')
+plt.title('Age Distribution')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.show()
+
+# Gender Count Plot
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Gender', data=data, palette='pastel')
+plt.title('Gender Distribution')
+plt.xlabel('Gender')
+plt.ylabel('Count')
+plt.xticks([0, 1], ['Male', 'Female'])
+plt.show()
+
+# Salary vs. Purchased Scatter Plot
+plt.figure(figsize=(6, 4))
+sns.scatterplot(x='Salary', y='Age', hue='Purchased', data=data, palette='viridis')
+plt.title('Salary vs Age (Colored by Purchase)')
+plt.xlabel('Salary')
+plt.ylabel('Age')
+plt.show()
+
+# Correlation Heatmap
+plt.figure(figsize=(6, 4))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+plt.show()
+
+
+Task 2
+Perform Data Pre-processing, Data Analysis and Visualization for a given dataset. Platform: Orange, Language: Python.
+Aim:
+To load, preprocess, analyze, and visualize a dataset, addressing missing values, encoding categorical data, and performing basic statistical analysis.
+
+Algorithm:
+1.Import Libraries:
+oLoad pandas, numpy, matplotlib.pyplot, and seaborn for data manipulation and visualization.
+2.Load Dataset:
+oLoad the CSV file using pandas and display the first few rows.
+3.Data Preprocessing:
+oCheck for missing values.
+oFill missing values in 'Age' with the mean and in 'Salary' with the median.
+oEncode 'Gender' (Male = 0, Female = 1) and 'Purchased' (No = 0, Yes = 1).
+4.Data Analysis:
+oGenerate descriptive statistics.
+oDisplay the correlation matrix.
+5.Data Visualization:
+oPlot age distribution (histogram with KDE).
+oPlot gender distribution (count plot).
+oPlot salary vs. age scatter plot (colored by purchase status).
+oDisplay a correlation heatmap.
+
+
+# Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 1: Load the Dataset
+# Replace 'data.csv' with the path to your dataset
+data = pd.read_csv('dataT.csv')
+print("First 5 rows of the dataset:")
+print(data.head())
+
+# Step 2: Data Preprocessing
+# Check for missing values
+print("\nChecking for missing values:")
+print(data.isnull().sum())
+
+# Fill missing values (if any)
+data['Age'].fillna(data['Age'].mean(), inplace=True)
+data['Salary'].fillna(data['Salary'].median(), inplace=True)
+
+# Encode categorical variables
+data['Gender'] = data['Gender'].map({'Male': 0, 'Female': 1})
+data['Purchased'] = data['Purchased'].map({'No': 0, 'Yes': 1})
+
+print("\nDataset after preprocessing:")
+print(data.head())
+
+# Step 3: Data Analysis
+print("\nDescriptive Statistics:")
+print(data.describe())
+
+# Correlation matrix
+print("\nCorrelation Matrix:")
+print(data.corr())
+
+# Step 4: Data Visualization
+# Distribution of Age
+plt.figure(figsize=(6, 4))
+sns.histplot(data['Age'], kde=True, bins=20, color='blue')
+plt.title('Age Distribution')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.show()
+
+# Gender Count Plot
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Gender', data=data, palette='pastel')
+plt.title('Gender Distribution')
+plt.xlabel('Gender')
+plt.ylabel('Count')
+plt.xticks([0, 1], ['Male', 'Female'])
+plt.show()
+
+# Salary vs. Purchased Scatter Plot
+plt.figure(figsize=(6, 4))
+sns.scatterplot(x='Salary', y='Age', hue='Purchased', data=data, palette='viridis')
+plt.title('Salary vs Age (Colored by Purchase)')
+plt.xlabel('Salary')
+plt.ylabel('Age')
+plt.show()
+
+# Correlation Heatmap
+plt.figure(figsize=(6, 4))
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+plt.show()
+
+
+
+TASK 3
+import numpy as np
+from sklearn.decomposition import PCA
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
+%matplotlib inline
+#Load data set
+data = pd.read_csv('Big_Mart_PCA1.csv')
+#convert it to numpy arrays
+X=data.values
+#Scaling the values
+X = scale(X)
+# Change n_components to be less than or equal to the minimum of n_samples and n_features
+pca = PCA(n_components=5)  # or any value less than or equal to 5
+pca.fit(X)
+#The amount of variance that each PC explains
+var= pca.explained_variance_ratio_
+#Cumulative Variance explains
+var1=np.cumsum(np.round(pca.explained_variance_ratio_, decimals=4)*100)
+print(var1)
+
+plt.plot(var1)
+# components
+pca.components_
+
+
+
+TASK 4
+i.Use Apriori and FP-growth algorithm to find all frequent item sets for the chosen datasetand also generate Association Rules.
+
+Apriori algorithm program
+import pandas as pd
+import numpy as np
+from mlxtend.frequent_patterns import apriori, association_rules
+df = pd.read_csv('/content/GroceryStoreDataSet.csv', names = ['products'], sep = ',')
+df.head()
+df.shape
+data = list(df["products"].apply(lambda x:x.split(",") ))
+data
+from mlxtend.preprocessing import TransactionEncoder
+a = TransactionEncoder()
+a_data = a.fit(data).transform(data)
+df = pd.DataFrame(a_data,columns=a.columns_)
+df = df.replace(False,0)
+df
+df = apriori(df, min_support = 0.2, use_colnames = True, verbose = 1)
+df
+df_ar = association_rules(df, metric = "confidence", min_threshold = 0.6)
+df_ar
+
+output
+0(MILK)(BREAD)0.250.650.20.8000001.2307691.00.03751.750.2500000.2857140.4285710.5538461(SUGER)(BREAD)0.300.650.20.6666671.0256411.00.00501.050.0357140.2666670.0476190.4871792(CORNFLAKES)(COFFEE)0.300.400.20.6666671.6666671.00.08001.800.5714290.4000000.4444440.5833333(SUGER)(COFFEE)0.300.400.20.6666671.6666671.00.08001.800.5714290.4000000.4444440.5833334(MAGGI)(TEA)0.250.350.20.8000002.2857141.00.11253.250.7500000.5000000.6923080.685714
+
+
+
+
+
+
+TASK 5
+Task5
+
+Build a model using any of the classification algorithms that can effectively analyze and classify a new sample. Calculate the classification rate, accuracy, precision, recall, F1-score and confusion matrix for your data set.
+
+
+import numpy as np
+from sklearn import metrics
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import load_iris
+
+# Load the Iris dataset
+iris = load_iris()
+
+# Features (X) and target (y)
+X = iris.data
+y = iris.target
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize a classifier (Random Forest in this case)
+classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the classifier on the training data
+classifier.fit(X_train, y_train)
+
+# Make predictions on the test set
+predictions = classifier.predict(X_test)
+
+# Evaluate model performance
+print("Accuracy:", accuracy_score(y_test, predictions))
+print("Precision:", precision_score(y_test, predictions, average='weighted'))
+print("Recall:", recall_score(y_test, predictions, average='weighted'))
+print("F1 Score:", f1_score(y_test, predictions, average='weighted'))
+
+# Print detailed classification report
+print("\nClassification Report:\n", classification_report(y_test, predictions))
+
+# Confusion matrix
+conf_matrix = metrics.confusion_matrix(y_test, predictions)
+
+# Plot the confusion matrix using Seaborn heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=iris.target_names, yticklabels=iris.target_names)
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.title('Confusion Matrix')
+plt.show()
+
+
+
+output
+
+
+
+
+
+TASK 9
+
+Perceptron 
+Implement a perceptron to solve a linearly separable problem.
+i.Demonstrate logical gate implementation using perceptron
+ii.Implement an MLP from scratch using Python/NumPy for a classification task.
+iii.Train the MLP using the backpropagation algorithm and evaluate its performance.
+
+
+# importing Python library 
+import numpy as np 
+
+# define Unit Step Function 
+def unitStep(v): 
+  if v >= 0: 
+    return 1
+  else: 
+    return 0
+
+# design Perceptron Model 
+def perceptronModel(x, w, b): 
+  v = np.dot(w, x) + b 
+  y = unitStep(v) 
+  return y 
+
+# OR Logic Function 
+# w1 = 1, w2 = 1, b = -0.5 
+def OR_logicFunction(x): 
+  w = np.array([1, 1]) 
+  b = -0.5
+  return perceptronModel(x, w, b) 
+
+# testing the Perceptron Model 
+test1 = np.array([0, 1]) 
+test2 = np.array([1, 1]) 
+test3 = np.array([0, 0]) 
+test4 = np.array([1, 0]) 
+
+print("OR({}, {}) = {}".format(0, 1, OR_logicFunction(test1))) 
+print("OR({}, {}) = {}".format(1, 1, OR_logicFunction(test2))) 
+print("OR({}, {}) = {}".format(0, 0, OR_logicFunction(test3))) 
+print("OR({}, {}) = {}".format(1, 0, OR_logicFunction(test4))) 
+
+
+Output
+OR(0, 1) = 1
+OR(1, 1) = 1
+OR(0, 0) = 0
+OR(1, 0) = 1
+II Implement an MLP from scratch using Python/NumPy for a classification task.
+
+
+import numpy as np
+from sklearn import datasets
+
+# load iris dataset
+iris = datasets.load_iris()
+X = iris["data"][:, (2, 3)]  # petal length, petal width
+y = (iris["target"] == 2).astype(int)  # 1 if Iris-Virginica, else 0
+y = y.reshape([150,1])
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def sigmoid_derivative(z):
+    s = sigmoid(z)
+    return s * (1 - s)
+class MLP:
+     def __init__(self, input_size, hidden_size, output_size, learning_rate=0.01):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.learning_rate = learning_rate
+        
+        # initialize weights randomly
+        self.weights1 = np.random.randn(self.input_size, self.hidden_size)
+        self.weights2 = np.random.randn(self.hidden_size, self.output_size)
+        
+        # initialize biases to 0
+        self.bias1 = np.zeros((1, self.hidden_size))
+        self.bias2 = np.zeros((1, self.output_size))
+    
+     def fit(self, X, y, epochs=1000):
+        for epoch in range(epochs):
+            # feedforward
+            layer1 = X.dot(self.weights1) + self.bias1
+            activation1 = sigmoid(layer1)
+            layer2 = activation1.dot(self.weights2) + self.bias2
+            activation2 = sigmoid(layer2)
+            
+            # backpropagation
+            error = activation2 - y
+            d_weights2 = activation1.T.dot(error * sigmoid_derivative(layer2))
+            d_bias2 = np.sum(error * sigmoid_derivative(layer2), axis=0, keepdims=True)
+            error_hidden = error.dot(self.weights2.T) * sigmoid_derivative(layer1)
+            d_weights1 = X.T.dot(error_hidden)
+            d_bias1 = np.sum(error_hidden, axis=0, keepdims=True)
+            
+            # update weights and biases
+            self.weights2 -= self.learning_rate * d_weights2
+            self.bias2 -= self.learning_rate * d_bias2
+            self.weights1 -= self.learning_rate * d_weights1
+            self.bias1 -= self.learning_rate * d_bias1
+    
+     def predict(self, X):
+        layer1 = X.dot(self.weights1) + self.bias1
+        activation1 = sigmoid(layer1)
+        layer2 = activation1.dot(self.weights2) + self.bias2
+        activation2 = sigmoid(layer2)
+        return (activation2 > 0.5).astype(int)
+        # create an instance of the MLP class
+mlp = MLP(input_size=2, hidden_size=4, output_size=1)
+
+# train the MLP on the training data
+mlp.fit(X, y)
+
+# make predictions on the test data
+y_pred = mlp.predict(X)
+
+# evaluate the accuracy of the MLP
+accuracy = np.mean(y_pred == y)
+print(f"Accuracy: {accuracy:.2f}")
+
+Output
+Accuracy: 0.95
+Just to Know
+✔ Why does it match?
+1.Uses Python and NumPy – No external deep learning libraries like TensorFlow/PyTorch.
+2.Implements an MLP from Scratch – Includes feedforward and backpropagation.
+3.Uses the Iris Dataset for Classification – Distinguishes whether a sample is Iris-Virginica or not.
+4.Trains the Model Using Backpropagation – Computes errors, gradients, and updates weights.
+5.Evaluates Performance – Computes accuracy on the dataset.
+🔹 Suggested Improvements
+✅ Split the dataset into training and testing sets (e.g., train_test_split).
+✅ Normalize features for better gradient descent performance.
+✅ Add more hidden layers to improve learning.
+✅ Use a different activation function like ReLU for hidden layers.
+
+
+
+III Train the MLP using the backpropagation algorithm and evaluate its performance.
+
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Generate synthetic dataset (XOR-like pattern)
+np.random.seed(42)
+X = np.random.rand(500, 2)  # 500 samples, 2 features
+y = (X[:, 0] + X[:, 1] > 1).astype(int).reshape(-1, 1)  # XOR-like pattern
+
+# Split dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Normalize data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Activation function and its derivative
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def sigmoid_derivative(z):
+    return z * (1 - z)
+
+# MLP Class with Backpropagation
+class MLP:
+    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.01):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.learning_rate = learning_rate
+        
+        # Initialize weights and biases
+        self.weights1 = np.random.randn(self.input_size, self.hidden_size)
+        self.weights2 = np.random.randn(self.hidden_size, self.output_size)
+        self.bias1 = np.zeros((1, self.hidden_size))
+        self.bias2 = np.zeros((1, self.output_size))
+
+    def fit(self, X, y, epochs=1000):
+        for epoch in range(epochs):
+            # Forward pass
+            hidden_layer = sigmoid(np.dot(X, self.weights1) + self.bias1)
+            output_layer = sigmoid(np.dot(hidden_layer, self.weights2) + self.bias2)
+            
+            # Compute error
+            error = output_layer - y
+            
+            # Backpropagation
+            d_output = error * sigmoid_derivative(output_layer)
+            d_hidden = np.dot(d_output, self.weights2.T) * sigmoid_derivative(hidden_layer)
+            
+            # Update weights and biases
+            self.weights2 -= self.learning_rate * np.dot(hidden_layer.T, d_output)
+            self.bias2 -= self.learning_rate * np.sum(d_output, axis=0, keepdims=True)
+            self.weights1 -= self.learning_rate * np.dot(X.T, d_hidden)
+            self.bias1 -= self.learning_rate * np.sum(d_hidden, axis=0, keepdims=True)
+            
+            # Print loss every 100 epochs
+            if epoch % 100 == 0:
+                loss = np.mean(np.square(error))  # Mean Squared Error
+                print(f"Epoch {epoch}: Loss = {loss:.4f}")
+
+    def predict(self, X):
+        hidden_layer = sigmoid(np.dot(X, self.weights1) + self.bias1)
+        output_layer = sigmoid(np.dot(hidden_layer, self.weights2) + self.bias2)
+        return (output_layer > 0.5).astype(int)
+
+# Train the MLP
+mlp = MLP(input_size=2, hidden_size=4, output_size=1, learning_rate=0.1)
+mlp.fit(X_train, y_train, epochs=1000)
+
+# Evaluate the model
+y_pred = mlp.predict(X_test)
+accuracy = np.mean(y_pred == y_test)
+print(f"Test Accuracy: {accuracy:.2f}")
+
+
+OutPut
+Epoch 0: Loss = 0.2402
+Epoch 100: Loss = 0.0084
+Epoch 200: Loss = 0.0062
+Epoch 300: Loss = 0.0063
+Epoch 400: Loss = 0.0058
+Epoch 500: Loss = 0.0055
+Epoch 600: Loss = 0.0052
+Epoch 700: Loss = 0.0049
+Epoch 800: Loss = 0.0046
+Epoch 900: Loss = 0.0043
+Test Accuracy: 0.99
+
+Explanation:
+1.Data Preparation:
+oGenerates synthetic XOR-like data.
+oSplits into training (80%) and testing (20%).
+oNormalizes data using StandardScaler.
+2.Neural Network Implementation:
+o2 input neurons, 4 hidden neurons, 1 output neuron.
+oSigmoid activation function is used.
+oUses backpropagation to update weights and biases.
+3.Training & Performance Evaluation:
+oRuns for 1000 epochs, printing loss every 100 epochs.
+oComputes accuracy on the test set after training.
+
+
+
+
+
+USECASE
+                                                      Use Case:2
+         Analyzing Customer Purchasing Behavior in a Retail Store
+
+1. Problem Statement:
+ Retail stores often struggle to understand customer purchasing behavior, which can lead to ineffective marketing strategies, poor inventory management, and missed sales opportunities. By analyzing customer purchasing behavior, the store can better predict customer needs, optimize inventory, and tailor marketing efforts to specific customer segments.
+
+
+2. Objectives:
+Predict whether a customer will buy a specific product based on their transaction history and demographic information.
+Segment customers into distinct groups based on their purchasing patterns to enable targeted marketing.
+Identify high-value customers who contribute significantly to revenue.
+Optimize marketing strategies and inventory management based on insights derived from customer behavior analysis.
+3. Stakeholders:
+
+Retail Management: Interested in overall sales performance and customer satisfaction.
+Marketing Team: Needs insights to create targeted marketing campaigns.
+Data Analysts: Responsible for data analysis and reporting.
+IT Department: Involved in implementing and maintaining the machine learning solution.
+4. Data Requirements:
+
+Customer Demographics: Age, gender, income level, location, etc.
+Transaction Data: Purchase history, transaction amounts, product categories, purchase frequency, and recency.
+Customer Feedback: Surveys or reviews that provide qualitative insights into customer preferences.
+5. Machine Learning Workflow:
+
+Step 1: Data Collection
+
+Gather data from various sources, including point-of-sale systems, customer loyalty programs, and online transactions.
+Step 2: Data Preprocessing
+
+Clean the data by handling missing values, removing duplicates, and normalizing numerical features.
+Encode categorical variables (e.g., product categories) using one-hot encoding or label encoding.
+Step 3: Feature Engineering
+
+Create new features that may be useful for analysis, such as total spending, frequency of purchases, and recency of last purchase.
+Step 4: Split the Dataset
+
+Divide the dataset into training and testing sets (e.g., 80% training, 20% testing) to evaluate model performance.
+Step 5: Classification
+
+Use a classification algorithm (e.g., Random Forest, Logistic Regression) to predict whether a customer will buy a specific product.
+Train the model on the training data and evaluate its performance using metrics like accuracy, precision, recall, and F1 score.
+Step 6: Clustering
+
+Apply clustering algorithms (e.g., K-Means) to segment customers based on their purchasing behavior.
+Determine the optimal number of clusters using the Elbow Method or Silhouette Score.
+Step 7: Build a Perceptron Model
+
+Create a simple binary classification model to predict high-value customers based on features such as total spend and purchase frequency.
+Step 8: Hyperparameter Tuning
+
+Optimize hyperparameters for both classification and clustering algorithms using techniques like Grid Search or Random Search.
+Step 9: Visualization and Reporting
+
+Visualize the results using confusion matrices, ROC curves, and customer segments.
+Generate reports for stakeholders to communicate insights and recommendations.
+6. Expected Outcomes:
+
+Improved accuracy in predicting customer purchasing behavior.
+Enhanced ability to segment customers for targeted marketing.
+Identification of high-value customers, leading to better retention strategies.
+Data-driven decision-making for inventory management and marketing campaigns.
+7. Future Enhancements:
+
+Incorporate advanced techniques such as deep learning for more complex patterns in customer behavior.
+Implement real-time analytics to adapt marketing strategies dynamically.
+Use natural language processing (NLP) to analyze customer feedback and sentiment.
+
+To develop a machine learning program that analyzes customer behavior in a retail store, you will need to process customer transaction data, apply relevant models like classification and clustering, and provide meaningful outputs such as predictions of purchasing behavior, customer segmentation, and identification of high-value customers.
+
+Let's break down a sample Python program for analyzing customer data in a retail store, using basic machine learning libraries such as Pandas, Scikit-learn, and Matplotlib.
+
+1. Data Collection and Preprocessing
+Assume you have a CSV file (customer_transactions.csv) with the following columns:
+
+Customer_ID: Unique identifier for the customer.
+
+Product_ID: Identifier for the product bought.
+
+Purchase_Amount: Total spend in a transaction.
+
+Purchase_Frequency: How often the customer buys from the store.
+
+Time_of_Purchase: Date and time of the purchase.
+
+The goal is to:
+
+Clean and preprocess the data.
+
+Predict whether a customer will buy a specific product (classification).
+
+Segment customers into groups (clustering).
+
+Identify high-value customers.
+
+Program Implementation:
+python
+Copy
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score, silhouette_score
+from sklearn.neural_network import MLPClassifier
+
+# Step 1: Load Data
+df = pd.read_csv('customer_transactions.csv')
+
+# Step 2: Data Preprocessing
+# Handle missing data (e.g., drop or impute missing values)
+df.fillna(df.mean(), inplace=True)
+
+# Feature Engineering: Convert 'Time_of_Purchase' to datetime and extract features
+df['Time_of_Purchase'] = pd.to_datetime(df['Time_of_Purchase'])
+df['Purchase_Hour'] = df['Time_of_Purchase'].dt.hour
+df['Purchase_Day'] = df['Time_of_Purchase'].dt.dayofweek
+
+# Normalization/Standardization
+scaler = StandardScaler()
+df[['Purchase_Amount', 'Purchase_Frequency']] = scaler.fit_transform(df[['Purchase_Amount', 'Purchase_Frequency']])
+
+# Step 3: Classification (Predicting Purchase Behavior)
+# Assume we have a column 'Will_Buy' which indicates whether a customer will buy a particular product
+X = df[['Purchase_Amount', 'Purchase_Frequency', 'Purchase_Hour', 'Purchase_Day']]
+y = df['Will_Buy']  # Target variable (1: will buy, 0: will not buy)
+
+# Split data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train Random Forest Classifier
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(X_train, y_train)
+
+# Make predictions and evaluate the model
+y_pred = clf.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Classification Model Accuracy: {accuracy:.2f}')
+
+# Step 4: Clustering (Customer Segmentation)
+# Select features for clustering
+X_cluster = df[['Purchase_Amount', 'Purchase_Frequency']]
+
+# Apply KMeans Clustering
+kmeans = KMeans(n_clusters=3, random_state=42)  # 3 clusters (low, medium, high spenders)
+df['Cluster'] = kmeans.fit_predict(X_cluster)
+
+# Evaluate clustering using Silhouette Score
+sil_score = silhouette_score(X_cluster, df['Cluster'])
+print(f'Silhouette Score for Clustering: {sil_score:.2f}')
+
+# Visualizing Clusters
+plt.scatter(df['Purchase_Amount'], df['Purchase_Frequency'], c=df['Cluster'], cmap='viridis')
+plt.xlabel('Purchase Amount')
+plt.ylabel('Purchase Frequency')
+plt.title('Customer Segments (Clustering)')
+plt.show()
+
+# Step 5: Identify High-Value Customers using Perceptron
+# Define high-value customers as those with above-average total spend
+df['High_Value'] = df['Purchase_Amount'] > df['Purchase_Amount'].mean()
+
+# Train a simple Perceptron (Neural Network) model
+X_perceptron = df[['Purchase_Amount', 'Purchase_Frequency', 'Purchase_Hour', 'Purchase_Day']]
+y_perceptron = df['High_Value']
+
+# Split data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X_perceptron, y_perceptron, test_size=0.2, random_state=42)
+
+# Initialize and train Perceptron model
+perceptron = MLPClassifier(hidden_layer_sizes=(10,), max_iter=1000, random_state=42)
+perceptron.fit(X_train, y_train)
+
+# Make predictions and evaluate the model
+y_pred_perceptron = perceptron.predict(X_test)
+high_value_accuracy = accuracy_score(y_test, y_pred_perceptron)
+print(f'Perceptron High-Value Customer Prediction Accuracy: {high_value_accuracy:.2f}')
+
+# Step 6: Output high-value customers
+high_value_customers = df[df['High_Value'] == 1]
+print(f'Number of High-Value Customers: {len(high_value_customers)}')
+
+# Output predictions for classification and clustering
+print("Predicted Purchase Behavior (Sample):", y_pred[:10])
+print("Customer Segments (Sample):", df[['Customer_ID', 'Cluster']].head())
+Explanation of the Code:
+Data Preprocessing:
+
+The dataset is loaded using Pandas and missing data is handled (imputed with the mean in this case).
+
+Temporal features such as the hour of the purchase and day of the week are extracted from the Time_of_Purchase column.
+
+Continuous numerical features (purchase amount and frequency) are normalized using StandardScaler.
+
+Classification (Predicting Purchase Behavior):
+
+A Random Forest Classifier is trained to predict whether a customer will buy a specific product (Will_Buy).
+
+The model is evaluated on accuracy using the test set.
+
+Clustering (Customer Segmentation):
+
+K-Means clustering is applied to segment customers based on their purchasing behavior (purchase amount and frequency).
+
+A silhouette score is calculated to evaluate the quality of the clustering.
+
+A scatter plot visualizes the customer segments.
+
+Perceptron (Identifying High-Value Customers):
+
+Customers are labeled as "high-value" if their purchase amount is above the average.
+
+A simple MLPClassifier (perceptron) is used to predict whether a customer is high-value based on their transaction features.
+
+The accuracy of the model is evaluated, and high-value customers are extracted from the data.
+
+Sample Output:
+bash
+Copy
+Classification Model Accuracy: 0.85
+Silhouette Score for Clustering: 0.43
+Perceptron High-Value Customer Prediction Accuracy: 0.88
+Number of High-Value Customers: 120
+Predicted Purchase Behavior (Sample): [1 0 1 0 1 1 0 0 1 1]
+Customer Segments (Sample):
+   Customer_ID  Cluster
+0            1        1
+1            2        0
+2            3        2
+3            4        0
+4            5        1
+
+Conclusion:
+This program provides an overview of how to analyze customer behavior using machine learning techniques. By implementing classification, clustering, and a perceptron for high-value customer prediction, retail stores can gain valuable insights into their customers' purchasing behavior, optimize marketing efforts, and identify key segments for targeted campaigns.
+
+Result:Thus  By implementing classification, clustering, and a perceptron for high-value customer prediction, retail stores can gain valuable insights into their customers' purchasing behavior, optimize marketing efforts, and identify key segments for targeted campaigns.
+
+
+
+
+TASK 10
+Task 10	Hyperparameter Tuning:
+i.Use grid search or random search to optimize hyperparameters for an MLP.
+ii.Compare results before and after tuning.
+Platform: Google co-lab, Language: Python
+
+Aim
+To implement a Multi-Layer Perceptron (MLP) Classifier for Breast Cancer dataset, perform hyperparameter tuning using Grid Search, and compare the results before and after optimization.
+Algorithm
+Step 1: Load Dataset
+Import Breast Cancer dataset from sklearn.datasets.
+Split data into training and testing sets.
+Step 2: Data Preprocessing
+Normalize features using StandardScaler for faster and stable training.
+Step 3: Train Base MLP Model
+Define a basic MLP classifier.
+Train the model and evaluate its initial accuracy.
+Step 4: Perform Hyperparameter Tuning
+Use Grid Search to find the best combination of: 
+oHidden layers
+oActivation functions
+oOptimizers (Adam/SGD)
+oLearning rate
+Train a new MLP model using the best hyperparameters.
+Step 5: Compare Performance
+Evaluate accuracy before and after tuning.
+Visualize training loss curves and accuracy comparison using bar charts.
+
+Program
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+# Load Breast Cancer dataset
+data = load_breast_cancer()
+X, y = data.data, data.target
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Normalize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+# Base MLP model (Before Hyperparameter Tuning)
+mlp = MLPClassifier(max_iter=1000, random_state=42)
+mlp.fit(X_train, y_train)
+y_pred = mlp.predict(X_test)
+base_accuracy = accuracy_score(y_test, y_pred)
+print(f"Base MLP Accuracy: {base_accuracy:.4f}")
+# Define Hyperparameter Grid for Grid Search
+grid_params = {
+    'hidden_layer_sizes': [(50,), (100,), (50, 50)],
+    'activation': ['relu', 'tanh'],
+    'solver': ['adam', 'sgd'],
+    'learning_rate_init': [0.001, 0.01, 0.1]
+}
+
+# Grid Search for Best Parameters
+grid_search = GridSearchCV(MLPClassifier(max_iter=1000, random_state=42), grid_params, cv=3, n_jobs=-1)
+grid_search.fit(X_train, y_train)
+print("Best Parameters from Grid Search:", grid_search.best_params_)
+# Train MLP with Best Parameters
+mlp_tuned = MLPClassifier(**grid_search.best_params_, max_iter=1000, random_state=42)
+mlp_tuned.fit(X_train, y_train)
+y_pred_tuned = mlp_tuned.predict(X_test)
+tuned_accuracy = accuracy_score(y_test, y_pred_tuned)
+print(f"Tuned MLP Accuracy: {tuned_accuracy:.4f}")
+# Visualization of Loss Curve
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(mlp.loss_curve_, label='Base MLP Training Loss', color='r')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Base MLP Training Loss')
+plt.legend()
+plt.grid()
+plt.subplot(1, 2, 2)
+plt.plot(mlp_tuned.loss_curve_, label='Tuned MLP Training Loss', color='b')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Tuned MLP Training Loss')
+plt.legend()
+plt.grid()
+plt.show()
+# Performance Comparison Visualization
+labels = ['Base MLP', 'Tuned MLP']
+accuracy_values = [base_accuracy, tuned_accuracy]
+plt.figure(figsize=(6, 4))
+plt.bar(labels, accuracy_values, color=['red', 'blue'])
+plt.ylim(0, 1)
+plt.ylabel('Accuracy')
+plt.title('MLP Accuracy Before and After Tuning')
+plt.show()
+# Print Performance Comparison
+print("----------------------------")
+print(f"Base Accuracy: {base_accuracy:.4f}")
+print(f"Tuned Accuracy: {tuned_accuracy:.4f}")
+Output
+
+
+TASK 8
+Task 8	Apply back propagation neural network on image data. The idea is to build a Artificial Neural Network model that can effectively analyze and extract features from an image. 
+Platform: Google co-lab Language: Python
+
+
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+from skimage.feature import local_binary_pattern
+
+# Load an image
+image_path = '/content/Apple1.jpg'  # Replace with your image path
+image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+image = cv2.resize(image, (28, 28))  # Resize to 28x28
+image = image / 255.0  # Normalize
+image = image.reshape(1, 28, 28, 1)  # Reshape for model input
+
+# Apply additional feature extraction filters
+sobelx = cv2.Sobel(image.reshape(28, 28), cv2.CV_64F, 1, 0, ksize=5)
+sobely = cv2.Sobel(image.reshape(28, 28), cv2.CV_64F, 0, 1, ksize=5)
+canny_edges = cv2.Canny((image * 255).astype(np.uint8), 100, 200)
+
+# Apply Local Binary Pattern (LBP) for texture analysis
+radius = 1
+n_points = 8 * radius
+lbp = local_binary_pattern(image.reshape(28, 28), n_points, radius, method='uniform')
+
+# Define the neural network model for feature extraction
+model = keras.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1)),
+    layers.MaxPooling2D((2,2)),
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D((2,2)),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(10, activation='softmax')
+])
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Predict on the single image
+prediction = model.predict(image)
+predicted_label = np.argmax(prediction)
+print(f'Predicted Label: {predicted_label}')
+
+# Display the original and extracted feature images
+fig, ax = plt.subplots(1, 5, figsize=(20, 5))
+ax[0].imshow(image.reshape(28, 28), cmap=plt.cm.binary)
+ax[0].set_title('Original Image')
+ax[1].imshow(sobelx, cmap='gray')
+ax[1].set_title('Sobel X')
+ax[2].imshow(sobely, cmap='gray')
+ax[2].set_title('Sobel Y')
+ax[3].imshow(canny_edges, cmap='gray')
+ax[3].set_title('Canny Edges')
+ax[4].imshow(lbp, cmap='gray')
+ax[4].set_title('LBP')
+
+for a in ax:
+    a.set_xticks([])
+    a.set_yticks([])
+
+plt.show()
+
+TASK 7
+Task 7	Apply partitioning and hierarchal clustering algorithms for a given dataset. Compare the results and comment on the quality of clustering using evaluation metrics
+Platform: Google co-lab, Language: Python
+
+
+Differences Illustrated:
+1.Cluster Structure:
+K-Means: Forms non-overlapping clusters.
+Hierarchical: Forms a tree structure, allowing for nested or overlapping clusters.
+2. Number of Clusters:
+K-Means: Requires a predefined number of clusters (3 in this case).
+Hierarchical: The dendrogram helps identify an optimal number of clusters based on visual inspection.
+3. Cluster Assignment:
+K-Means: Assigns each data point to one cluster.
+Hierarchical: Data points can belong to multiple levels of the hierarchy.
+4. Interpretability:
+K-Means: Provides clear, distinct clusters.
+Hierarchical: Visualizes relationships between data points, showing which ones are closer or more similar.
+5. Visual Representation:
+K-Means: Visualized using scatter plots.
+Hierarchical: Visualized using dendrograms.
+In the Iris dataset, K-Means would assign each flower to one of three clusters based on the specified features, while hierarchical clustering would showcase the hierarchical relationships between flowers in a dendrogram.
+These differences highlight the unique strengths and use cases for each clustering method. Choose the method that best suits your data and analytical goals.
+
+
+
+import pandas as pd
+from sklearn.cluster import KMeans
+from scipy.cluster.hierarchy import dendrogram, linkage
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+
+# Load Iris dataset
+iris = datasets.load_iris()
+iris_df = pd.DataFrame(data=iris['data'], columns=iris['feature_names'])
+
+# =====================
+# Partitioning Clustering (K-Means)
+# =====================
+
+# Applying K-Means with 3 clusters
+kmeans = KMeans(n_clusters=3, random_state=42)
+iris_df['KMeans_Cluster'] = kmeans.fit_predict(iris_df)
+
+# Visualize K-Means clustering
+plt.figure(figsize=(6, 4))
+plt.scatter(iris_df['sepal length (cm)'], iris_df['sepal width (cm)'], c=iris_df['KMeans_Cluster'], cmap='rainbow')
+plt.title('K-Means Clustering for Iris Dataset')
+plt.xlabel('Sepal Length (cm)')
+plt.ylabel('Sepal Width (cm)')
+plt.show()
+
+# =====================
+# Hierarchical Clustering
+# =====================
+
+# Applying Hierarchical Clustering
+linked = linkage(iris_df.iloc[:, :2], 'ward')
+plt.figure(figsize=(8, 6))
+dendrogram(linked, labels=iris.target_names[iris.target])
+plt.title('Hierarchical Clustering Dendrogram for Iris Dataset')
+plt.xlabel('Iris Species')
+plt.show()
+
+# =====================
+# Evaluation Metrics
+# =====================
+
+# Using Silhouette Score and Adjusted Rand Index (ARI) for evaluation
+silhouette_kmeans = silhouette_score(iris_df.iloc[:, :4], iris_df['KMeans_Cluster'])
+ari_kmeans = adjusted_rand_score(iris.target, iris_df['KMeans_Cluster'])
+
+print('Evaluation Metrics for K-Means Clustering:')
+print(f'Silhouette Score: {silhouette_kmeans:.2f}')
+print(f'Adjusted Rand Index: {ari_kmeans:.2f}')
+
+# Since hierarchical clustering doesn't provide direct labels, comparing qualitatively using dendrogram visualization
+print('Hierarchical Clustering Evaluation: Refer to the Dendrogram for quality assessment.')
+
+output
+
+
+
+
+
+
+
+
+
+
+
+
+
